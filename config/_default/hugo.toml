@@ -1,7 +1,7 @@
 # timeout
 timeout = "1200s"
 # your website url
-baseURL = 'https://songsc.atomgit.net/'
+baseURL = 'https://songsc.atomgit.net/us/'
 # website title
 title = 'Cui & Song'
 # don't touch this
