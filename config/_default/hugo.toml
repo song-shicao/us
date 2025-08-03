@@ -1,7 +1,7 @@
 # timeout
 timeout = "1200s"
 # your website url
-baseURL = 'https://song-shichao.github.io/us/'
+baseURL = 'https://song-shichao.github.io/'
 # website title
 title = 'Cui & Song'
 # don't touch this
