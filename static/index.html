@@ -8,7 +8,7 @@
     <title>Cui & Song</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700&display=swap');
-        
+
         * {
             margin: 0;
             padding: 0;
@@ -35,7 +35,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: 
+            background-image:
                 radial-gradient(2px 2px at 20px 30px, rgba(0,0,0,0.05), transparent),
                 radial-gradient(2px 2px at 40px 70px, rgba(0,0,0,0.03), transparent),
                 radial-gradient(1px 1px at 90px 40px, rgba(0,0,0,0.04), transparent),
@@ -113,7 +113,7 @@
             #container {
                 padding: 20px;
             }
-            
+
             #subtitle {
                 font-size: 0.9rem;
             }
@@ -125,11 +125,11 @@
         }
 
         @keyframes valentine-elegant {
-            0%, 100% { 
+            0%, 100% {
                 color: #2c3e50;
                 transform: scale(1);
             }
-            50% { 
+            50% {
                 color: #e91e63;
                 transform: scale(1.02);
             }
@@ -146,11 +146,11 @@
         }
 
         @keyframes milestone-dignified {
-            0%, 100% { 
+            0%, 100% {
                 color: #2c3e50;
                 text-shadow: 0 0 30px rgba(44,62,80,0.3);
             }
-            50% { 
+            50% {
                 color: #f39c12;
                 text-shadow: 0 0 40px rgba(243, 156, 18, 0.4);
             }
@@ -243,17 +243,17 @@
     </div>
     <script>
         // ─── Main Functions ─────────────────────────────────────────────────
-        
+
         $(document).ready(function() {
             // Calculate and display days together
             updateCounter();
-            
+
             // Check for special events
             checkSpecialEvents();
-            
+
             // Check URL parameters for forced event display
             handleUrlEvents();
-            
+
             // Initialize swipe gesture
             initSwipeGesture();
         });
@@ -285,13 +285,13 @@
         function checkSpecialEvents() {
             const now = new Date();
             const days = calculateDaysSince();
-            
+
             // Check if URL parameter forces event display, if so skip auto-detection
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('event')) {
                 return; // Skip auto-detection, handled by URL event processing
             }
-            
+
             // Check if it's Valentine's Day (February 14th every year)
             if (now.getMonth() === 1 && now.getDate() === 14) {
                 applyValentineEffect();
@@ -349,19 +349,19 @@
             let startY = 0;
             let startTime = 0;
             let isScrolling = false;
-            
+
             // Touch events
             document.addEventListener('touchstart', function(e) {
                 startY = e.touches[0].clientY;
                 startTime = Date.now();
                 isScrolling = false;
             }, { passive: true });
-            
+
             document.addEventListener('touchmove', function(e) {
                 if (!isScrolling) {
                     const currentY = e.touches[0].clientY;
                     const deltaY = startY - currentY;
-                    
+
                     // Detect upward swipe gesture
                     if (deltaY > 80) { // Swipe up more than 80px
                         isScrolling = true;
@@ -369,12 +369,12 @@
                     }
                 }
             }, { passive: true });
-            
+
             // Mouse wheel events
             let wheelTimeout;
             document.addEventListener('wheel', function(e) {
                 clearTimeout(wheelTimeout);
-                
+
                 // Scroll up
                 if (e.deltaY < -50 || e.deltaY > 50) {
                     wheelTimeout = setTimeout(() => {
@@ -382,7 +382,7 @@
                     }, 100);
                 }
             }, { passive: true });
-            
+
             // Keyboard events (optional: up arrow key can also trigger)
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'ArrowUp') {
@@ -390,11 +390,11 @@
                 }
             });
         }
-        
+
         function triggerPageTransition() {
             // Add slide effect
             $('body').addClass('page-slide-up');
-            
+
             // Wait for animation to complete then redirect
             setTimeout(() => {
                 window.location.href = '/nature/';
