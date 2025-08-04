@@ -1,12 +1,12 @@
 ---
 type: _default
 layout: single
-url: /event/
+url: /tale/
 menu:
   main:
-    weight: 4
-    identifier: Event
-    title: Event
+    weight: 15
+    identifier: Tale
+    title: Tale
 unifiedAlt: 'Some days write history in the language of light.'
 _build:
   publishResources: false

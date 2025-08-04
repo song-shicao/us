@@ -1,12 +1,12 @@
 ---
 type: _default
 layout: single
-url: /people/
+url: /soul/
 menu:
   main:
-    weight: 3
-    identifier: People
-    title: People
+    weight: 10
+    identifier: Soul
+    title: Soul
 unifiedAlt: 'A single glance can reveal a world untold.'
 _build:
   publishResources: false
