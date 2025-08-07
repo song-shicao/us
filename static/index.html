@@ -407,10 +407,10 @@
             // Mouse wheel events (for scroll wheels and trackpad scrolling)
             document.addEventListener('wheel', e => {
                 clearTimeout(gestureState.wheelTimeout);
-                
+
                 // Accumulate wheel delta for more precise detection
                 gestureState.wheelAccumulator += Math.abs(e.deltaY);
-                
+
                 // Reset accumulator after a short delay
                 gestureState.wheelTimeout = setTimeout(() => {
                     gestureState.wheelAccumulator = 0;
