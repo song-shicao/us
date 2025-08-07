@@ -25,16 +25,6 @@
             overflow: hidden;
             position: relative;
             transition: transform 0.3s ease-out;
-            /* Disable text selection during drag gestures */
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            /* Disable drag behavior for elements */
-            -webkit-user-drag: none;
-            -khtml-user-drag: none;
-            -moz-user-drag: none;
-            -o-user-drag: none;
         }
 
         /* Dynamic background particle effect */
@@ -231,6 +221,9 @@
         .page-slide-up {
             transform: translateY(-100vh);
         }
+        .page-slide-down {
+            transform: translateY(100vh);
+        }
     </style>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.3/jquery.js"></script>
 </head>
@@ -249,7 +242,7 @@
         <br>
     </div>
     <div class="swipe-hint">
-        ↑ Explore gallery
+        ↕ Explore gallery
     </div>
     <script>
         // ─── Main Functions ─────────────────────────────────────────────────
@@ -353,93 +346,114 @@
             }
         }
 
-        // ─── Gesture Handling ──────────────────────────────────────────────
+        // ─── Swipe Gesture Handling ──────────────────────────────────────────────
 
         function initSwipeGesture() {
-            const gestureState = {
-                startY: 0,
-                startX: 0,
-                isPointerDown: false,
-                hasTriggered: false,
-                wheelAccumulator: 0,
-                wheelTimeout: null
-            };
+            let startY = 0;
+            let isDragging = false;
+            let isTransitioning = false;
+            const swipeThreshold = 80; // Min pixels for a swipe
 
-            // Prevent default drag behaviors
-            ['dragstart', 'selectstart'].forEach(event => {
-                document.addEventListener(event, e => {
-                    if (event === 'selectstart' && !gestureState.isPointerDown) return;
-                    e.preventDefault();
-                });
+            // Touch events
+            document.addEventListener('touchstart', function(e) {
+                if (isTransitioning) return;
+                startY = e.touches[0].clientY;
+            }, { passive: true });
+
+            document.addEventListener('touchmove', function(e) {
+                if (isTransitioning || startY === 0) return;
+
+                const currentY = e.touches[0].clientY;
+                const deltaY = startY - currentY;
+
+                if (deltaY > swipeThreshold) { // Swipe up
+                    isTransitioning = true;
+                    triggerPageTransition('up');
+                    startY = 0;
+                } else if (deltaY < -swipeThreshold) { // Swipe down
+                    isTransitioning = true;
+                    triggerPageTransition('down');
+                    startY = 0;
+                }
+            }, { passive: true });
+
+            // Mouse drag events
+            document.addEventListener('mousedown', function(e) {
+                if (isTransitioning) return;
+                isDragging = true;
+                startY = e.clientY;
             });
 
-            // Unified pointer events (supports mouse, touch, pen, trackpad)
-            document.addEventListener('pointerdown', e => {
-                Object.assign(gestureState, {
-                    startY: e.clientY,
-                    startX: e.clientX,
-                    isPointerDown: true,
-                    hasTriggered: false
-                });
-            });
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging || isTransitioning) return;
 
-            document.addEventListener('pointermove', e => {
-                if (!gestureState.isPointerDown || gestureState.hasTriggered) return;
+                const currentY = e.clientY;
+                const deltaY = startY - currentY;
 
-                const deltaY = Math.abs(gestureState.startY - e.clientY);
-                const deltaX = Math.abs(gestureState.startX - e.clientX);
-
-                // Detect vertical swipe/drag (vertical movement > horizontal movement)
-                if (deltaY > 60 && deltaY > deltaX * 1.5) {
-                    gestureState.hasTriggered = true;
-                    triggerPageTransition();
+                if (deltaY > swipeThreshold) { // Drag up
+                    isTransitioning = true;
+                    isDragging = false;
+                    triggerPageTransition('up');
+                } else if (deltaY < -swipeThreshold) { // Drag down
+                    isTransitioning = true;
+                    isDragging = false;
+                    triggerPageTransition('down');
                 }
             });
 
-            // Reset pointer state
-            ['pointerup', 'pointercancel'].forEach(event => {
-                document.addEventListener(event, () => {
-                    gestureState.isPointerDown = false;
-                    gestureState.hasTriggered = false;
-                });
+            document.addEventListener('mouseup', function() {
+                isDragging = false;
+                startY = 0;
+            });
+             document.addEventListener('mouseleave', function() {
+                isDragging = false;
             });
 
-            // Mouse wheel events (for scroll wheels and trackpad scrolling)
-            document.addEventListener('wheel', e => {
-                clearTimeout(gestureState.wheelTimeout);
+            // Mouse wheel events (for mouse and trackpad)
+            document.addEventListener('wheel', function(e) {
+                if (isTransitioning) return;
 
-                // Accumulate wheel delta for more precise detection
-                gestureState.wheelAccumulator += Math.abs(e.deltaY);
+                // A lower threshold to be more responsive to trackpad scrolling
+                const wheelThreshold = 20;
 
-                // Reset accumulator after a short delay
-                gestureState.wheelTimeout = setTimeout(() => {
-                    gestureState.wheelAccumulator = 0;
-                }, 150);
-
-                // Trigger on significant scroll (up or down)
-                if (gestureState.wheelAccumulator > 100) {
-                    gestureState.wheelAccumulator = 0; // Reset to prevent multiple triggers
-                    triggerPageTransition();
+                if (e.deltaY > wheelThreshold) { // Scroll down -> content moves up
+                    isTransitioning = true;
+                    triggerPageTransition('up');
+                } else if (e.deltaY < -wheelThreshold) { // Scroll up -> content moves down
+                    isTransitioning = true;
+                    triggerPageTransition('down');
                 }
             }, { passive: true });
 
             // Keyboard events
-            document.addEventListener('keydown', e => {
-                if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown'].includes(e.key)) {
-                    e.preventDefault();
-                    triggerPageTransition();
+            document.addEventListener('keydown', function(e) {
+                if (isTransitioning) return;
+                if (e.key === 'ArrowUp') {
+                    isTransitioning = true;
+                    triggerPageTransition('up');
+                } else if (e.key === 'ArrowDown') {
+                    isTransitioning = true;
+                    triggerPageTransition('down');
                 }
             });
         }
 
-        function triggerPageTransition() {
-            // Add slide effect
-            $('body').addClass('page-slide-up');
+        function triggerPageTransition(direction) {
+            let targetUrl = '/soul/'; // Default URL
+            let slideClass = 'page-slide-up';
+
+            if (direction === 'down') {
+                slideClass = 'page-slide-down';
+                // For now, down transition also goes to the same gallery page.
+                // This can be changed to a different URL if needed.
+            }
+
+            $('body').addClass(slideClass);
 
             // Wait for animation to complete then redirect
             setTimeout(() => {
-                window.location.href = '/soul/';
-            }, 300);
+                window.location.href = targetUrl;
+            }, 300); // Match CSS transition time
         }
     </script>
 </body>
