@@ -25,6 +25,16 @@
             overflow: hidden;
             position: relative;
             transition: transform 0.3s ease-out;
+            /* Disable text selection during drag gestures */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            /* Disable drag behavior for elements */
+            -webkit-user-drag: none;
+            -khtml-user-drag: none;
+            -moz-user-drag: none;
+            -o-user-drag: none;
         }
 
         /* Dynamic background particle effect */
@@ -343,49 +353,80 @@
             }
         }
 
-        // ─── Swipe Gesture Handling ──────────────────────────────────────────────
+        // ─── Gesture Handling ──────────────────────────────────────────────
 
         function initSwipeGesture() {
-            let startY = 0;
-            let startTime = 0;
-            let isScrolling = false;
+            const gestureState = {
+                startY: 0,
+                startX: 0,
+                isPointerDown: false,
+                hasTriggered: false,
+                wheelAccumulator: 0,
+                wheelTimeout: null
+            };
 
-            // Touch events
-            document.addEventListener('touchstart', function(e) {
-                startY = e.touches[0].clientY;
-                startTime = Date.now();
-                isScrolling = false;
-            }, { passive: true });
+            // Prevent default drag behaviors
+            ['dragstart', 'selectstart'].forEach(event => {
+                document.addEventListener(event, e => {
+                    if (event === 'selectstart' && !gestureState.isPointerDown) return;
+                    e.preventDefault();
+                });
+            });
 
-            document.addEventListener('touchmove', function(e) {
-                if (!isScrolling) {
-                    const currentY = e.touches[0].clientY;
-                    const deltaY = startY - currentY;
+            // Unified pointer events (supports mouse, touch, pen, trackpad)
+            document.addEventListener('pointerdown', e => {
+                Object.assign(gestureState, {
+                    startY: e.clientY,
+                    startX: e.clientX,
+                    isPointerDown: true,
+                    hasTriggered: false
+                });
+            });
 
-                    // Detect upward swipe gesture
-                    if (deltaY > 80) { // Swipe up more than 80px
-                        isScrolling = true;
-                        triggerPageTransition();
-                    }
+            document.addEventListener('pointermove', e => {
+                if (!gestureState.isPointerDown || gestureState.hasTriggered) return;
+
+                const deltaY = Math.abs(gestureState.startY - e.clientY);
+                const deltaX = Math.abs(gestureState.startX - e.clientX);
+
+                // Detect vertical swipe/drag (vertical movement > horizontal movement)
+                if (deltaY > 60 && deltaY > deltaX * 1.5) {
+                    gestureState.hasTriggered = true;
+                    triggerPageTransition();
+                }
+            });
+
+            // Reset pointer state
+            ['pointerup', 'pointercancel'].forEach(event => {
+                document.addEventListener(event, () => {
+                    gestureState.isPointerDown = false;
+                    gestureState.hasTriggered = false;
+                });
+            });
+
+            // Mouse wheel events (for scroll wheels and trackpad scrolling)
+            document.addEventListener('wheel', e => {
+                clearTimeout(gestureState.wheelTimeout);
+
+                // Accumulate wheel delta for more precise detection
+                gestureState.wheelAccumulator += Math.abs(e.deltaY);
+
+                // Reset accumulator after a short delay
+                gestureState.wheelTimeout = setTimeout(() => {
+                    gestureState.wheelAccumulator = 0;
+                }, 150);
+
+                // Trigger on significant scroll (up or down)
+                if (gestureState.wheelAccumulator > 100) {
+                    gestureState.wheelAccumulator = 0; // Reset to prevent multiple triggers
+                    triggerPageTransition();
                 }
             }, { passive: true });
 
-            // Mouse wheel events
-            let wheelTimeout;
-            document.addEventListener('wheel', function(e) {
-                clearTimeout(wheelTimeout);
-
-                // Scroll up
-                if (e.deltaY < -50 || e.deltaY > 50) {
-                    wheelTimeout = setTimeout(() => {
-                        triggerPageTransition();
-                    }, 100);
-                }
-            }, { passive: true });
-
-            // Keyboard events (optional: up arrow key can also trigger)
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'ArrowUp') {
+            // Keyboard events
+            document.addEventListener('keydown', e => {
+                if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown'].includes(e.key)) {
+                    e.preventDefault();
                     triggerPageTransition();
                 }
             });
