@@ -221,6 +221,9 @@
         .page-slide-up {
             transform: translateY(-100vh);
         }
+        .page-slide-down {
+            transform: translateY(100vh);
+        }
     </style>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.3/jquery.js"></script>
 </head>
@@ -239,7 +242,7 @@
         <br>
     </div>
     <div class="swipe-hint">
-        ↑ Explore gallery
+        ↕ Explore gallery
     </div>
     <script>
         // ─── Main Functions ─────────────────────────────────────────────────
@@ -347,58 +350,110 @@
 
         function initSwipeGesture() {
             let startY = 0;
-            let startTime = 0;
-            let isScrolling = false;
+            let isDragging = false;
+            let isTransitioning = false;
+            const swipeThreshold = 80; // Min pixels for a swipe
 
             // Touch events
             document.addEventListener('touchstart', function(e) {
+                if (isTransitioning) return;
                 startY = e.touches[0].clientY;
-                startTime = Date.now();
-                isScrolling = false;
             }, { passive: true });
 
             document.addEventListener('touchmove', function(e) {
-                if (!isScrolling) {
-                    const currentY = e.touches[0].clientY;
-                    const deltaY = startY - currentY;
+                if (isTransitioning || startY === 0) return;
+                
+                const currentY = e.touches[0].clientY;
+                const deltaY = startY - currentY;
 
-                    // Detect upward swipe gesture
-                    if (deltaY > 80) { // Swipe up more than 80px
-                        isScrolling = true;
-                        triggerPageTransition();
-                    }
+                if (deltaY > swipeThreshold) { // Swipe up
+                    isTransitioning = true;
+                    triggerPageTransition('up');
+                    startY = 0;
+                } else if (deltaY < -swipeThreshold) { // Swipe down
+                    isTransitioning = true;
+                    triggerPageTransition('down');
+                    startY = 0;
                 }
             }, { passive: true });
 
-            // Mouse wheel events
-            let wheelTimeout;
+            // Mouse drag events
+            document.addEventListener('mousedown', function(e) {
+                if (isTransitioning) return;
+                isDragging = true;
+                startY = e.clientY;
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging || isTransitioning) return;
+
+                const currentY = e.clientY;
+                const deltaY = startY - currentY;
+
+                if (deltaY > swipeThreshold) { // Drag up
+                    isTransitioning = true;
+                    isDragging = false;
+                    triggerPageTransition('up');
+                } else if (deltaY < -swipeThreshold) { // Drag down
+                    isTransitioning = true;
+                    isDragging = false;
+                    triggerPageTransition('down');
+                }
+            });
+
+            document.addEventListener('mouseup', function() {
+                isDragging = false;
+                startY = 0;
+            });
+             document.addEventListener('mouseleave', function() {
+                isDragging = false;
+            });
+
+            // Mouse wheel events (for mouse and trackpad)
             document.addEventListener('wheel', function(e) {
-                clearTimeout(wheelTimeout);
+                if (isTransitioning) return;
 
-                // Scroll up
-                if (e.deltaY < -50 || e.deltaY > 50) {
-                    wheelTimeout = setTimeout(() => {
-                        triggerPageTransition();
-                    }, 100);
+                // A lower threshold to be more responsive to trackpad scrolling
+                const wheelThreshold = 20; 
+
+                if (e.deltaY > wheelThreshold) { // Scroll down -> content moves up
+                    isTransitioning = true;
+                    triggerPageTransition('up');
+                } else if (e.deltaY < -wheelThreshold) { // Scroll up -> content moves down
+                    isTransitioning = true;
+                    triggerPageTransition('down');
                 }
             }, { passive: true });
 
-            // Keyboard events (optional: up arrow key can also trigger)
+            // Keyboard events
             document.addEventListener('keydown', function(e) {
+                if (isTransitioning) return;
                 if (e.key === 'ArrowUp') {
-                    triggerPageTransition();
+                    isTransitioning = true;
+                    triggerPageTransition('up');
+                } else if (e.key === 'ArrowDown') {
+                    isTransitioning = true;
+                    triggerPageTransition('down');
                 }
             });
         }
 
-        function triggerPageTransition() {
-            // Add slide effect
-            $('body').addClass('page-slide-up');
+        function triggerPageTransition(direction) {
+            let targetUrl = '/soul/'; // Default URL
+            let slideClass = 'page-slide-up';
+
+            if (direction === 'down') {
+                slideClass = 'page-slide-down';
+                // For now, down transition also goes to the same gallery page.
+                // This can be changed to a different URL if needed.
+            }
+            
+            $('body').addClass(slideClass);
 
             // Wait for animation to complete then redirect
             setTimeout(() => {
-                window.location.href = '/soul/';
-            }, 300);
+                window.location.href = targetUrl;
+            }, 300); // Match CSS transition time
         }
     </script>
 </body>
