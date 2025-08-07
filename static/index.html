@@ -362,7 +362,7 @@
 
             document.addEventListener('touchmove', function(e) {
                 if (isTransitioning || startY === 0) return;
-                
+
                 const currentY = e.touches[0].clientY;
                 const deltaY = startY - currentY;
 
@@ -414,7 +414,7 @@
                 if (isTransitioning) return;
 
                 // A lower threshold to be more responsive to trackpad scrolling
-                const wheelThreshold = 20; 
+                const wheelThreshold = 20;
 
                 if (e.deltaY > wheelThreshold) { // Scroll down -> content moves up
                     isTransitioning = true;
@@ -447,7 +447,7 @@
                 // For now, down transition also goes to the same gallery page.
                 // This can be changed to a different URL if needed.
             }
-            
+
             $('body').addClass(slideClass);
 
             // Wait for animation to complete then redirect
